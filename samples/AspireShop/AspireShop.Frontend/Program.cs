@@ -7,6 +7,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
+builder.Host.ConfigureAppConfiguration((ctx, config) =>
+{
+    config.AddVaultDevServerConfiguration(() => new VaultOptions
+    {
+        VaultAddress = ctx.Configuration["VAULT_ADDR"],
+        VaultToken = ctx.Configuration["VAULT_TOKEN"],
+        VaultMount = ctx.Configuration["VAULT_APP_MOUNT"],
+        AllowInsecure = true,
+        Services = builder.Services
+    });
+});
+
 builder.Services.AddHttpForwarderWithServiceDiscovery();
 
 builder.Services.AddHttpServiceReference<CatalogServiceClient>("https+http://catalogservice", healthRelativePath: "health");
