@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
+﻿using AspireShop.Extensions;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using AspireShop.Frontend.Components;
 using AspireShop.Frontend.Services;
 using AspireShop.GrpcBasket;
@@ -14,9 +15,8 @@ builder.Host.ConfigureAppConfiguration((ctx, config) =>
         VaultAddress = ctx.Configuration["VAULT_ADDR"],
         VaultToken = ctx.Configuration["VAULT_TOKEN"],
         VaultMount = ctx.Configuration["VAULT_APP_MOUNT"],
-        AllowInsecure = true,
-        Services = builder.Services
-    });
+        AllowInsecure = true
+    },  builder.Services);
 });
 
 builder.Services.AddHttpForwarderWithServiceDiscovery();

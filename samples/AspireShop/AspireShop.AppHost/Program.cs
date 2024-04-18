@@ -6,7 +6,6 @@ var builder = DistributedApplication.CreateBuilder(args);
 var vault = builder.AddVaultServer("vault");
 builder.AddExecutable("vaultcli", "bash", ".", "vault_setup.sh");
 
-
 var catalogDb = builder.AddPostgres("catalog", password: builder.CreateStablePassword("catalog-password"))
     .WithDataVolume()
     .AddDatabase("catalogdb");
@@ -28,6 +27,7 @@ builder.AddProject<Projects.AspireShop_Frontend>("frontend")
     .WithExternalHttpEndpoints();
 
 builder.AddProject<Projects.AspireShop_CatalogDbManager>("catalogdbmanager")
+    .WithReference(vault)
     .WithReference(catalogDb);
 
 builder.Build().Run();

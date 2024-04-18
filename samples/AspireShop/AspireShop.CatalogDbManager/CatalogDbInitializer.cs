@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using AspireShop.CatalogDb;
+using Stripe;
 
 namespace AspireShop.CatalogDbManager;
 
@@ -15,8 +16,10 @@ internal class CatalogDbInitializer(IServiceProvider serviceProvider, ILogger<Ca
     {
         using var scope = serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
+        var stripeClient = scope.ServiceProvider.GetRequiredService<IStripeClient>();
 
         await InitializeDatabaseAsync(dbContext, cancellationToken);
+        await SeedAsync(dbContext, stripeClient, cancellationToken);
     }
 
     private async Task InitializeDatabaseAsync(CatalogDbContext dbContext, CancellationToken cancellationToken)
@@ -28,12 +31,10 @@ internal class CatalogDbInitializer(IServiceProvider serviceProvider, ILogger<Ca
         var strategy = dbContext.Database.CreateExecutionStrategy();
         await strategy.ExecuteAsync(dbContext.Database.MigrateAsync, cancellationToken);
 
-        await SeedAsync(dbContext, cancellationToken);
-
         logger.LogInformation("Database initialization completed after {ElapsedMilliseconds}ms", sw.ElapsedMilliseconds);
     }
 
-    private async Task SeedAsync(CatalogDbContext dbContext, CancellationToken cancellationToken)
+    private async Task SeedAsync(CatalogDbContext dbContext, IStripeClient stripeClient, CancellationToken cancellationToken)
     {
         logger.LogInformation("Seeding database");
 
@@ -112,5 +113,73 @@ internal class CatalogDbInitializer(IServiceProvider serviceProvider, ILogger<Ca
 
             await dbContext.SaveChangesAsync(cancellationToken);
         }
+        
+        // Stripe
+        static async Task<bool> AnyExistingProducts(IStripeClient stripeClient, CancellationToken cancellationToken) {
+            var listOptions = new ProductListOptions { Active = true, Limit = 1 };
+            var  productService = new ProductService(stripeClient);
+            
+            var existingProducts = await productService.ListAsync(listOptions, cancellationToken: cancellationToken);
+            return existingProducts.Any();
+        }
+        
+        async Task CreateStripeProductAsync(IStripeClient stripeClient,
+            CatalogItem catalogItem, CancellationToken cancellationToken)
+        {
+            var productService = new ProductService(stripeClient);
+            var priceService = new PriceService(stripeClient);
+            var fileService = new FileService(stripeClient);
+            var fileLinkService = new FileLinkService(stripeClient);
+            
+            // Store product image in Stripe
+            var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "../AspireShop.CatalogService/Images", catalogItem.PictureFileName);
+            await using var imageStream = System.IO.File.OpenRead(imagePath);
+            
+            logger.LogInformation("Storing image located in {ImagePath} in Stripe", imagePath);
+            var createdFile = await fileService.CreateAsync(new FileCreateOptions
+            {
+                File = imageStream, Purpose = FilePurpose.BusinessLogo
+            }, cancellationToken: cancellationToken);
+            
+            var fileLink = await fileLinkService.CreateAsync(new FileLinkCreateOptions()
+            {
+                File = createdFile.Id
+            }, cancellationToken: cancellationToken);
+
+            // Create the product
+            var product = await productService.CreateAsync(new ProductCreateOptions
+            {
+                Name = catalogItem.Name,
+                Description = catalogItem.Description,
+                Images = [fileLink.Url],
+                Metadata = new Dictionary<string, string>
+                {
+                    { "catalog.item.id", catalogItem.Id.ToString() },
+                    { "catalog.type", catalogItem.CatalogType.Type },
+                    { "catalog.brand", catalogItem.CatalogBrand.Brand }
+                }
+            }, cancellationToken: cancellationToken);
+            
+           var price = await priceService.CreateAsync(new PriceCreateOptions
+            {
+                Product = product.Id,
+                Currency = "usd",
+                UnitAmount = (long)(catalogItem.Price * 100),
+            }, cancellationToken: cancellationToken);
+        }
+
+         if (!await AnyExistingProducts(stripeClient, cancellationToken))
+         {
+             var priceService = new PriceService(stripeClient);
+             
+             var includableQueryable = dbContext.CatalogItems
+                 .Include(catalogItem => catalogItem.CatalogType)
+                 .Include(catalogItem => catalogItem.CatalogBrand);
+             
+             foreach (var catalogItem in includableQueryable)
+             {
+                 await CreateStripeProductAsync(stripeClient, catalogItem, cancellationToken);
+             }
+         }
     }
 }

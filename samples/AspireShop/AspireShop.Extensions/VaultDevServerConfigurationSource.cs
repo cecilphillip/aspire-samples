@@ -1,8 +1,9 @@
 ﻿using System.Text.Json;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Nito.AsyncEx;
 
-namespace AspireShop.Frontend;
-using Microsoft.Extensions.DependencyInjection;
+namespace AspireShop.Extensions;
 
 public class VaultOptions
 {
@@ -12,29 +13,21 @@ public class VaultOptions
     public bool AllowInsecure { get; init; }
     public bool PeriodicRefresh { get; init; } = false;
     public int RefreshInterval { get; init; } = 30;
-
-    public IServiceCollection Services { get; init; }
 }
-public class VaultDevServerConfigurationSource(VaultOptions options) : IConfigurationSource
+public class VaultDevServerConfigurationSource(VaultOptions options, IServiceCollection services) : IConfigurationSource
 {
     public IConfigurationProvider Build(IConfigurationBuilder builder)
     {
-        return new VaultDevServerConfigurationProvider(options);
+        var provider = services.BuildServiceProvider();
+        return new VaultDevServerConfigurationProvider(options, provider);
     }
 }
 
-public class VaultDevServerConfigurationProvider: ConfigurationProvider
+public class VaultDevServerConfigurationProvider(VaultOptions options, IServiceProvider provider)
+    : ConfigurationProvider
 {
-    private readonly VaultOptions _options;
-    private readonly IServiceProvider _provider;
     private int _currentVersion = -1;
 
-    public VaultDevServerConfigurationProvider(VaultOptions options)
-    {
-        _options = options;
-      _provider = _options.Services.BuildServiceProvider();
-    }
-    
     public override void Load()
     {
         AsyncContext.Run(LoadAsync);
@@ -42,9 +35,9 @@ public class VaultDevServerConfigurationProvider: ConfigurationProvider
     
     private async Task LoadAsync()
     {
-        if(_options.PeriodicRefresh)
+        if(options.PeriodicRefresh)
         {
-            var timer = new PeriodicTimer(TimeSpan.FromSeconds(_options.RefreshInterval));
+            var timer = new PeriodicTimer(TimeSpan.FromSeconds(options.RefreshInterval));
             while (await timer.WaitForNextTickAsync(CancellationToken.None))
             {
                 await LoadFromVaultAsync();
@@ -58,8 +51,8 @@ public class VaultDevServerConfigurationProvider: ConfigurationProvider
 
     private async Task LoadFromVaultAsync()
     {
-        using var httpClient = _provider.GetService<IHttpClientFactory>().CreateClient("vault");
-        var response = await httpClient.GetAsync($"v1/{_options.VaultMount}/data/stripe");
+        using var httpClient = provider.GetService<IHttpClientFactory>().CreateClient("vault");
+        var response = await httpClient.GetAsync($"v1/{options.VaultMount}/data/stripe");
         
         if(response.IsSuccessStatusCode)
         {
@@ -75,7 +68,7 @@ public class VaultDevServerConfigurationProvider: ConfigurationProvider
             
             foreach(var property in dataValues)
             {
-                var key = property.Name.ToUpper();
+                var key = $"STRIPE_{property.Name.ToUpper()}";
                 var value = property.Value.GetString();
                 Data[key] = value;
             }
@@ -85,24 +78,21 @@ public class VaultDevServerConfigurationProvider: ConfigurationProvider
     }
 }
 
-
-
-
 public static class ConfigurationManagerExtensions
 {
-    public static IConfigurationBuilder AddVaultDevServerConfiguration(this IConfigurationBuilder configBuilder, Func<VaultOptions> configureOptions)
+    public static IConfigurationBuilder AddVaultDevServerConfiguration(this IConfigurationBuilder configBuilder, Func<VaultOptions> configureOptions, IServiceCollection services)
     {
         var options = configureOptions();
         
         if(options.VaultAddress == null)
             throw new ArgumentNullException(nameof(options.VaultAddress));
         
-        options.Services.AddHttpClient("vault", c =>
+        services.AddHttpClient("vault", c =>
         {
             c.BaseAddress = new Uri(options.VaultAddress);
             c.DefaultRequestHeaders.Add("X-Vault-Token", options.VaultToken);
         });
-         configBuilder.Add(new VaultDevServerConfigurationSource(options));
+         configBuilder.Add(new VaultDevServerConfigurationSource(options, services));
 
         return configBuilder;
     }
