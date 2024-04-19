@@ -55,6 +55,7 @@ public partial class Initial : Migration
                 Description = table.Column<string>(type: "text", nullable: true),
                 Price = table.Column<decimal>(type: "numeric", nullable: false),
                 PictureFileName = table.Column<string>(type: "text", nullable: true),
+                PictureUri = table.Column<string>(type: "text", nullable: true),
                 CatalogTypeId = table.Column<int>(type: "integer", nullable: false),
                 CatalogBrandId = table.Column<int>(type: "integer", nullable: false),
                 AvailableStock = table.Column<int>(type: "integer", nullable: false),
