@@ -5,6 +5,9 @@ public class VaultServerResource(string name) : ContainerResource(name), IResour
     internal const string PrimaryEndpointName = "http";
     internal const int DefaultContainerPort = 8200;
     internal const string DefaultTokenId = "dev-root";
+    
+    private EndpointReference? _primaryEndpoint;
+    public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new(this, PrimaryEndpointName);
 }
 
 public static class VaultServerBuilderExtensions
@@ -21,7 +24,7 @@ public static class VaultServerBuilderExtensions
             .WithImage("hashicorp/vault")
             .WithImageRegistry("docker.io")
             .WithHttpEndpoint(
-                port: port ?? VaultServerResource.DefaultContainerPort,
+                port: port,
                 targetPort: VaultServerResource.DefaultContainerPort,
                 name: VaultServerResource.PrimaryEndpointName
             )
@@ -41,13 +44,11 @@ public static class VaultServerBuilderExtensions
         
         return builder.WithEnvironment(ctx =>
         {
-            ctx.EnvironmentVariables["VAULT_INSECURE"] = ReferenceExpression.Create($"true");
-
-            var address = $"http://{source.Resource.Name}:{VaultServerResource.DefaultContainerPort}";
-            ctx.EnvironmentVariables["VAULT_ADDR"] = ReferenceExpression.Create($"{address}");
-            ctx.EnvironmentVariables["VAULT_APP_MOUNT"] = ReferenceExpression.Create($"aspireshop");
-            ctx.EnvironmentVariables["VAULT_TOKEN"] =
-                ReferenceExpression.Create($"{rootTokenId ?? VaultServerResource.DefaultTokenId}");
+            ctx.EnvironmentVariables["VAULT_INSECURE"] = "true";
+            var address = ReferenceExpression.Create($"http://{source.Resource.Name}:{source.Resource.PrimaryEndpoint.Property(EndpointProperty.Port)}");
+            ctx.EnvironmentVariables["VAULT_ADDR"] = address;
+            ctx.EnvironmentVariables["VAULT_APP_MOUNT"] ="aspireshop";
+            ctx.EnvironmentVariables["VAULT_TOKEN"] = $"{rootTokenId ?? VaultServerResource.DefaultTokenId}";
         });
     }
 }
