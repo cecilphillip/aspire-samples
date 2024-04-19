@@ -1,10 +1,11 @@
 ﻿using AspireShop.AppHost.Resources;
-using Microsoft.Extensions.Configuration;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
 var vault = builder.AddVaultServer("vault");
-builder.AddExecutable("vaultcli", "bash", ".", "vault_setup.sh");
+
+builder.AddExecutable("vaultcli", "bash", ".", "vault_setup.sh")
+    .WithReference(vault);
 
 var catalogDb = builder.AddPostgres("catalog", password: builder.CreateStablePassword("catalog-password"))
     .WithDataVolume()

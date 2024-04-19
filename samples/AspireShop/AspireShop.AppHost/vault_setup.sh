@@ -1,5 +1,4 @@
-export VAULT_TOKEN="dev-root"
-export VAULT_ADDR='http://0.0.0.0:8200'
+export VAULT_ADDR=http://0.0.0.0:$VAULT_PORT
 
 echo "Enabling KV secrets engine at path 'aspireshop'"
 vault secrets enable -path='aspireshop' -version=2 kv
@@ -7,7 +6,7 @@ vault secrets enable -path='aspireshop' -version=2 kv
 echo "Writing stripe keys"
 vault kv put -mount=aspireshop stripe public_key="" secret_key=""
 
-#vault secrets list
+vault secrets list
 exit 0
 
 
