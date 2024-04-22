@@ -111,24 +111,25 @@ internal class CatalogDbInitializer(IServiceProvider serviceProvider, ILogger<Ca
 
             logger.LogInformation("Seeding {CatalogItemCount} catalog items", items.Count);
             
-            await SeedStripeAsync(dbContext, stripeClient, cancellationToken);
+            await SeedStripeAsync(items, cancellationToken);
+            
             await dbContext.SaveChangesAsync(cancellationToken);
         }
 
         return;
 
         // Stripe
-        async Task<bool> AnyExistingProducts(CancellationToken cancellationToken)
+        async Task<bool> AnyExistingProducts(CancellationToken cancelToken)
         {
             var listOptions = new ProductListOptions { Active = true, Limit = 1 };
             var productService = new ProductService(stripeClient);
 
-            var existingProducts = await productService.ListAsync(listOptions, cancellationToken: cancellationToken);
+            var existingProducts = await productService.ListAsync(listOptions, cancellationToken: cancelToken);
             return existingProducts.Any();
         }
 
         async Task CreateStripeProductAsync(
-            CatalogItem catalogItem, CancellationToken cancellationToken)
+            CatalogItem catalogItem, CancellationToken cancelToken)
         {
             var productService = new ProductService(stripeClient);
             var priceService = new PriceService(stripeClient);
@@ -143,10 +144,10 @@ internal class CatalogDbInitializer(IServiceProvider serviceProvider, ILogger<Ca
             logger.LogInformation("Storing image located in {ImagePath} in Stripe", imagePath);
             var createdFile = await fileService.CreateAsync(
                 new FileCreateOptions { File = imageStream, Purpose = FilePurpose.BusinessLogo },
-                cancellationToken: cancellationToken);
+                cancellationToken: cancelToken);
 
             var fileLink = await fileLinkService.CreateAsync(new FileLinkCreateOptions() { File = createdFile.Id },
-                cancellationToken: cancellationToken);
+                cancellationToken: cancelToken);
 
             // Create the product
             var product = await productService.CreateAsync(
@@ -161,26 +162,25 @@ internal class CatalogDbInitializer(IServiceProvider serviceProvider, ILogger<Ca
                         { "catalog.type", catalogItem.CatalogType.Type },
                         { "catalog.brand", catalogItem.CatalogBrand.Brand }
                     }
-                }, cancellationToken: cancellationToken);
+                }, cancellationToken: cancelToken);
 
             catalogItem.PictureUri = fileLink.Url;
             
             // Create the price
-            var price = await priceService.CreateAsync(
+            await priceService.CreateAsync(
                 new PriceCreateOptions
                 {
                     Product = product.Id, Currency = "usd", UnitAmount = (long)(catalogItem.Price * 100),
-                }, cancellationToken: cancellationToken);
+                }, cancellationToken: cancelToken);
         }
 
-        async Task SeedStripeAsync(CatalogDbContext dbContext, IStripeClient stripeClient,
-            CancellationToken cancellationToken)
+        async Task SeedStripeAsync(IEnumerable<CatalogItem> items, CancellationToken cancelToken)
         {
-            if (!await AnyExistingProducts(cancellationToken))
+            if (!await AnyExistingProducts(cancelToken))
             {
                 foreach (var catalogItem in dbContext.CatalogItems.Local)
                 {
-                    await CreateStripeProductAsync(catalogItem, cancellationToken);
+                    await CreateStripeProductAsync(catalogItem, cancelToken);
                 }
             }
         }

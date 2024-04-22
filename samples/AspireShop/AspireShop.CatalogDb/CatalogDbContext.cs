@@ -69,7 +69,8 @@ public class CatalogDbContext(DbContextOptions<CatalogDbContext> options) : DbCo
         builder.Property(ci => ci.PictureFileName)
             .IsRequired(false);
 
-        builder.Ignore(ci => ci.PictureUri);
+        builder.Property(ci => ci.PictureUri)
+            .IsRequired(false);
 
         builder.HasOne(ci => ci.CatalogBrand)
             .WithMany()

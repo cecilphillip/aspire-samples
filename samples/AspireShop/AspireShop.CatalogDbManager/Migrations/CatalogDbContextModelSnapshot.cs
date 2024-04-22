@@ -81,6 +81,9 @@ namespace AspireShop.CatalogDbManager.Migrations
 
                     b.Property<string>("PictureFileName")
                         .HasColumnType("text");
+                    
+                    b.Property<string>("PictureUri")
+                        .HasColumnType("text");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric");
