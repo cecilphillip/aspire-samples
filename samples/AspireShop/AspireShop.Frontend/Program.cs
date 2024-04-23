@@ -21,6 +21,7 @@ builder.Host.ConfigureAppConfiguration((ctx, config) =>
 });
 #pragma warning restore ASP0013
 
+builder.Services.AddStripe(builder.Configuration);
 builder.Services.AddHttpForwarderWithServiceDiscovery();
 
 builder.Services.AddHttpServiceReference<CatalogServiceClient>("https+http://catalogservice", healthRelativePath: "health");

@@ -3,6 +3,7 @@
 
 <EditForm Model="this" FormName="@($"addtocart-{Item.Id}")" OnSubmit="HandleAddToCart" data-enhance>
     <input type="hidden" name="itemid" value="@Item.Id" />
+    <input type="hidden" name="stripepriceId" value="@Item.StripePriceId" />
     <button type="submit" class="align-content-end cart-button" title=@($"Add {@Item.Name} to cart?")>
         <i class="fa fa-cart-plus" aria-hidden="true"></i>
     </button>
@@ -15,10 +16,13 @@
 
     [SupplyParameterFromForm]
     public int ItemId { get; set; }
+    
+    [SupplyParameterFromForm]
+    public string StripePriceId { get; set; } = string.Empty;
 
     private async Task HandleAddToCart()
     {
-        await BasketClient.AddToCartAsync("user", ItemId);
+        await BasketClient.AddToCartAsync("user", ItemId, StripePriceId);
 
         // Preserve query string
         Navigation.NavigateTo($"/{new Uri(Navigation.Uri).Query}");
