@@ -2,11 +2,11 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
-    <AspNetCoreVersion>8.0.3</AspNetCoreVersion>
-    <EfCoreVersion>8.0.3</EfCoreVersion>
-    <GrpcVersion>2.61.0</GrpcVersion>
-    <AspireVersion>8.0.0-preview.5.24201.12</AspireVersion>
-    <OrleansVersion>8.1.0-preview3</OrleansVersion>
+    <AspNetCoreVersion>8.0.4</AspNetCoreVersion>
+    <EfCoreVersion>8.0.4</EfCoreVersion>
+    <GrpcVersion>2.62.0</GrpcVersion>
+    <AspireVersion>8.0.0-preview.6.24214.1</AspireVersion>
+    <OrleansVersion>8.1.0</OrleansVersion>
   </PropertyGroup>
   <ItemGroup>
     <!-- Version together with Aspire -->
