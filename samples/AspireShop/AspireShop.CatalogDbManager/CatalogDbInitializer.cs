@@ -158,20 +158,20 @@ internal class CatalogDbInitializer(IServiceProvider serviceProvider, ILogger<Ca
                     Images = [fileLink.Url],
                     Metadata = new Dictionary<string, string>
                     {
-                        { "catalog.item.id", catalogItem.Id.ToString() },
                         { "catalog.type", catalogItem.CatalogType.Type },
                         { "catalog.brand", catalogItem.CatalogBrand.Brand }
                     }
                 }, cancellationToken: cancelToken);
-
-            catalogItem.PictureUri = fileLink.Url;
             
             // Create the price
-            await priceService.CreateAsync(
+            var price = await priceService.CreateAsync(
                 new PriceCreateOptions
                 {
                     Product = product.Id, Currency = "usd", UnitAmount = (long)(catalogItem.Price * 100),
                 }, cancellationToken: cancelToken);
+            
+            catalogItem.PictureUri = fileLink.Url;
+            catalogItem.StripePriceId = price.Id;
         }
 
         async Task SeedStripeAsync(IEnumerable<CatalogItem> items, CancellationToken cancelToken)

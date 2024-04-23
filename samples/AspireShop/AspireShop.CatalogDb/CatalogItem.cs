@@ -8,6 +8,7 @@ public class CatalogItem
     public decimal Price { get; set; }
     public required string PictureFileName { get; set; }
     public string? PictureUri { get; set; }
+    public string StripePriceId { get; set; }
 
     public int CatalogTypeId { get; set; }
     public required CatalogType CatalogType { get; set; }

@@ -31,6 +31,7 @@ message BasketItemResponse {
 	DecimalValue unitPrice = 4;
 	DecimalValue oldUnitPrice = 5;
 	int32 quantity = 6;
+  string stripePriceId = 7;
 }
 
 message CheckoutCustomerBasketRequest {

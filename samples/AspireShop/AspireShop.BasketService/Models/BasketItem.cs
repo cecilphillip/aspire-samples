@@ -6,6 +6,7 @@ public class BasketItem : IValidatableObject
 {
     public string? Id { get; set; }
     public int ProductId { get; set; }
+    public string StripePriceId { get; set; } = string.Empty;
     public decimal UnitPrice { get; set; }
     public decimal OldUnitPrice { get; set; }
     public int Quantity { get; set; }

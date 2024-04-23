@@ -54,12 +54,8 @@ public class BasketService(IBasketRepository repository, ILogger<BasketService> 
         };
 
         logger.LogInformation("Checking out {Count} item(s) for BuyerId: {BuyerId}.", order.Items.Count, buyerId);
-
-        // Checkout logic would be implemented here
-
+        
         await repository.DeleteBasketAsync(buyerId);
-
-        logger.LogInformation("Order Id {Id} submitted.", order.Id);
 
         return new();
     }
@@ -85,7 +81,8 @@ public class BasketService(IBasketRepository repository, ILogger<BasketService> 
                 OldUnitPrice = item.OldUnitPrice,
                 ProductId = item.ProductId,
                 Quantity = item.Quantity,
-                UnitPrice = item.UnitPrice
+                UnitPrice = item.UnitPrice,
+                StripePriceId = item.StripePriceId
             });
         }
 
@@ -107,7 +104,8 @@ public class BasketService(IBasketRepository repository, ILogger<BasketService> 
                 OldUnitPrice = item.OldUnitPrice,
                 ProductId = item.ProductId,
                 Quantity = item.Quantity,
-                UnitPrice = item.UnitPrice
+                UnitPrice = item.UnitPrice,
+                StripePriceId = item.StripePriceId
             });
         }
 

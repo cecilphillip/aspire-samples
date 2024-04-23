@@ -56,6 +56,7 @@ public partial class Initial : Migration
                 Price = table.Column<decimal>(type: "numeric", nullable: false),
                 PictureFileName = table.Column<string>(type: "text", nullable: true),
                 PictureUri = table.Column<string>(type: "text", nullable: true),
+                StripePriceId = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
                 CatalogTypeId = table.Column<int>(type: "integer", nullable: false),
                 CatalogBrandId = table.Column<int>(type: "integer", nullable: false),
                 AvailableStock = table.Column<int>(type: "integer", nullable: false),

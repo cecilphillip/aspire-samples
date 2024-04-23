@@ -25,7 +25,7 @@ public class BasketServiceClient(Basket.BasketClient client)
         }
     }
 
-    public async Task<CustomerBasket> AddToCartAsync(string buyerId, int productId)
+    public async Task<CustomerBasket> AddToCartAsync(string buyerId, int productId, string stripePriceId)
     {
         var (basket, _) = await GetBasketAsync(buyerId);
         basket ??= new CustomerBasket(buyerId);
@@ -46,7 +46,8 @@ public class BasketServiceClient(Basket.BasketClient client)
             {
                 Id = Guid.NewGuid().ToString("N"),
                 Quantity = 1,
-                ProductId = productId
+                ProductId = productId,
+                StripePriceId = stripePriceId
             });
         }
 
@@ -80,7 +81,8 @@ public class BasketServiceClient(Basket.BasketClient client)
                 OldUnitPrice = item.OldUnitPrice,
                 ProductId = item.ProductId,
                 Quantity = item.Quantity,
-                UnitPrice = item.UnitPrice
+                UnitPrice = item.UnitPrice,
+                StripePriceId = item.StripePriceId
             });
         }
 
@@ -102,7 +104,8 @@ public class BasketServiceClient(Basket.BasketClient client)
                 OldUnitPrice = item.OldUnitPrice,
                 ProductId = item.ProductId,
                 Quantity = item.Quantity,
-                UnitPrice = item.UnitPrice
+                UnitPrice = item.UnitPrice,
+                StripePriceId = item.StripePriceId
             });
         }
 

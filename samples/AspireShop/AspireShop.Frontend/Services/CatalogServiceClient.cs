@@ -28,6 +28,7 @@ public record CatalogItem
     public required string Description { get; init; }
     public decimal Price { get; init; }
     public string? PictureUri { get; init; }
+    public string StripePriceId { get; init; } = string.Empty;
     public int CatalogBrandId { get; init; }
     public required string CatalogBrand { get; init; }
     public int CatalogTypeId { get; init; }
