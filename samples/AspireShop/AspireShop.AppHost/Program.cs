@@ -2,6 +2,8 @@
 
 var builder = DistributedApplication.CreateBuilder(args);
 
+var envVars = builder.AddEnvironmentVariables("env", ".env");
+
 var vault = builder.AddVaultServer("vault");
 
 builder.AddExecutable("vaultcli", "bash", ".", "vault_setup.sh")
@@ -25,6 +27,7 @@ builder.AddProject<Projects.AspireShop_Frontend>("frontend")
     .WithReference(basketService)
     .WithReference(catalogService)
     .WithReference(vault)
+    .WithReference(envVars)
     .WithExternalHttpEndpoints();
 
 builder.AddProject<Projects.AspireShop_CatalogDbManager>("catalogdbmanager")
