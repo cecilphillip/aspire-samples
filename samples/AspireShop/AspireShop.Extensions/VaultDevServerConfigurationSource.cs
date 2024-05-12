@@ -80,7 +80,7 @@ public class VaultDevServerConfigurationProvider(VaultOptions options, IServiceP
 
 public static class ConfigurationManagerExtensions
 {
-    public static IConfigurationBuilder AddVaultDevServerConfiguration(this IConfigurationBuilder configBuilder, Func<VaultOptions> configureOptions, IServiceCollection services)
+    public static IConfigurationBuilder AddVaultDevServerConfiguration(this ConfigurationManager configBuilder, Func<VaultOptions> configureOptions, IServiceCollection services)
     {
         var options = configureOptions();
         
@@ -92,7 +92,7 @@ public static class ConfigurationManagerExtensions
             c.BaseAddress = new Uri(options.VaultAddress);
             c.DefaultRequestHeaders.Add("X-Vault-Token", options.VaultToken);
         });
-         configBuilder.Add(new VaultDevServerConfigurationSource(options, services));
+         (configBuilder as IConfigurationBuilder).Add(new VaultDevServerConfigurationSource(options, services));
 
         return configBuilder;
     }

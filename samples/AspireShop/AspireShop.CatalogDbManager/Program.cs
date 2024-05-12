@@ -7,18 +7,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-#pragma warning disable ASP0013
-builder.Host.ConfigureAppConfiguration((ctx, config) =>
+builder.Configuration.AddVaultDevServerConfiguration(() => new VaultOptions
 {
-    config.AddVaultDevServerConfiguration(() => new VaultOptions
-    {
-        VaultAddress = ctx.Configuration["VAULT_ADDR"] ?? string.Empty,
-        VaultToken = ctx.Configuration["VAULT_TOKEN"] ?? string.Empty,
-        VaultMount = ctx.Configuration["VAULT_APP_MOUNT"] ?? string.Empty,
-        AllowInsecure = true
-    }, builder.Services);
-});
-#pragma warning restore ASP0013
+    VaultAddress = builder.Configuration["VAULT_ADDR"] ?? string.Empty,
+    VaultToken = builder.Configuration["VAULT_TOKEN"] ?? string.Empty,
+    VaultMount = builder.Configuration["VAULT_APP_MOUNT"] ?? string.Empty,
+    AllowInsecure = true
+},  builder.Services);
 
 builder.AddNpgsqlDbContext<CatalogDbContext>("catalogdb", null,
     optionsBuilder => optionsBuilder.UseNpgsql(npgsqlBuilder =>

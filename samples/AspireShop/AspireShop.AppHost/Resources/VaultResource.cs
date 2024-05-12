@@ -44,12 +44,11 @@ public static class VaultServerBuilderExtensions
         
         return builder.WithEnvironment(ctx =>
         {
-            ctx.EnvironmentVariables["VAULT_INSECURE"] = "true";
             var address = ReferenceExpression.Create($"http://{source.Resource.Name}:{source.Resource.PrimaryEndpoint.Property(EndpointProperty.Port)}");
             ctx.EnvironmentVariables["VAULT_ADDR"] = address;
             ctx.EnvironmentVariables["VAULT_PORT"] = ReferenceExpression.Create($"{source.Resource.PrimaryEndpoint.Property(EndpointProperty.Port)}");;
             ctx.EnvironmentVariables["VAULT_APP_MOUNT"] ="aspireshop";
-            ctx.EnvironmentVariables["VAULT_TOKEN"] = $"{rootTokenId ?? VaultServerResource.DefaultTokenId}";
+            ctx.EnvironmentVariables["VAULT_TOKEN"] = rootTokenId ?? VaultServerResource.DefaultTokenId;
         });
     }
 }
